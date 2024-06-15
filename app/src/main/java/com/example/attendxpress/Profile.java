@@ -31,7 +31,7 @@ public class Profile extends AppCompatActivity {
     Button moveHome;
     TextView nameDisplay;
     TextView emailDisplay;
-    SQLiteDatabase db;
+    SQLiteDatabase AttendXPressDB;
     Intent getEmail;
     Cursor getName;
     ImageView profile;
@@ -48,18 +48,17 @@ public class Profile extends AppCompatActivity {
         emailDisplay = findViewById(R.id.emailDisplay_profile);
         profile = findViewById(R.id.profile);
 
-        db = openOrCreateDatabase("AttendXPressDB", Context.MODE_PRIVATE, null);
-        db.execSQL("CREATE TABLE IF NOT EXISTS attendxpressdb(email VARCHAR, password VARCHAR, name VARCHAR, profile_picture TEXT);");
+        AttendXPressDB = openOrCreateDatabase("AttendXPressDB", Context.MODE_PRIVATE, null);
 
-        getEmail = getIntent();
-        String sEmail = getEmail.getStringExtra("email");
-        getName = db.rawQuery("SELECT name FROM attendxpressdb WHERE email='" + sEmail + "'", null);
+        String sEmail = GlobalVariables.email;
+
+        getName = AttendXPressDB.rawQuery("SELECT name FROM " + GlobalVariables.email + " WHERE email='" + sEmail + "'", null);
         if (getName != null) {
             nameDisplay.setText((getName.moveToFirst()) ? getName.getString(getName.getColumnIndex("name")) : "Name not found");
         }
         emailDisplay.setText(sEmail);
 
-        Cursor loadedProfile = db.rawQuery("SELECT profile_picture FROM attendxpressdb WHERE email='" + sEmail + "'", null);
+        Cursor loadedProfile = AttendXPressDB.rawQuery("SELECT profile_picture FROM " + GlobalVariables.email + " WHERE email='" + sEmail + "'", null);
         if (loadedProfile != null) {
             if (loadedProfile.moveToFirst()) {
                 String sProfile = loadedProfile.getString(0);
@@ -77,7 +76,7 @@ public class Profile extends AppCompatActivity {
                 if (uri != null) {
                     getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     profile.setImageURI(uri);
-                    db.execSQL("UPDATE attendxpressdb SET profile_picture='" + uri + "' WHERE email='" + sEmail + "'");
+                    AttendXPressDB.execSQL("UPDATE " + GlobalVariables.email + " SET profile_picture='" + uri + "' WHERE email='" + sEmail + "'");
                 }
             }
         });
@@ -90,7 +89,6 @@ public class Profile extends AppCompatActivity {
         moveHome.setOnClickListener(v -> {
             Intent i = new Intent(Profile.this, Home.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            i.putExtra("email", sEmail);
             startActivity(i);
         });
         nameDisplay.setOnClickListener(v -> {
@@ -108,7 +106,7 @@ public class Profile extends AppCompatActivity {
                     Toast.makeText(this, "New name cant be empty.", Toast.LENGTH_SHORT).show();
                 } else {
                     nameDisplay.setText(newName);
-                    db.execSQL("UPDATE attendxpressdb SET name='" + newName + "' WHERE email='" + sEmail + "'");
+                    AttendXPressDB.execSQL("UPDATE " + GlobalVariables.email + " SET name='" + newName + "' WHERE email='" + sEmail + "'");
                 }
             }));
             builder.setNegativeButton(android.R.string.cancel, ((dialog, which) -> dialog.cancel()));

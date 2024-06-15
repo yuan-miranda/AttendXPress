@@ -28,12 +28,9 @@ public class Loading extends AppCompatActivity {
             } else {
                 new Handler().postDelayed(() -> {
                     Intent i = new Intent(Loading.this, Home.class);
-                    Intent getEmail = getIntent();
-                    i.putExtra("email", getEmail.getStringExtra("email"));
                     i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(i);
                 }, 2000);
-
             }
         });
 

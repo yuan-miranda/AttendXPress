@@ -23,7 +23,8 @@ public class Attendance extends AppCompatActivity {
     Button checkInToday;
     Button checkPendingAttendance;
     Button moveHome;
-    SQLiteDatabase attendanceDB;
+    SQLiteDatabase AttendanceDB;
+    SQLiteDatabase PendingAttendanceDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,17 +35,23 @@ public class Attendance extends AppCompatActivity {
         checkPendingAttendance = findViewById(R.id.checkPendingAttendance);
         moveHome = findViewById(R.id.moveHome);
 
-        attendanceDB = openOrCreateDatabase("attendanceDB" + GlobalVariables.email, Context.MODE_PRIVATE, null);
-        attendanceDB.execSQL("CREATE TABLE IF NOT EXISTS attendancedb" + GlobalVariables.email + "(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, day TEXT NOT NULL, isPresent INTEGER NOT NULL)");
+        AttendanceDB = openOrCreateDatabase("AttendanceDB", Context.MODE_PRIVATE, null);
+        AttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS attendancedbtable" + GlobalVariables.email + "(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, day TEXT NOT NULL, isPresent INTEGER NOT NULL)");
+
+        PendingAttendanceDB = openOrCreateDatabase("PendingAttendanceDB", Context.MODE_PRIVATE, null);
+        PendingAttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS " + GlobalVariables.email + "(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, day TEXT NOT NULL, pendingState TEXT NOT NULL, pitikImage TEXT NOT NULL)");
 
         // display the attendance stacks
         constructAttendanceElements();
 
         checkInToday.setOnClickListener(v -> {
-            Cursor c = attendanceDB.rawQuery("SELECT * FROM attendanceDB" + GlobalVariables.email + " WHERE date=?", new String[]{GlobalVariables.getCurrentDate()});
-            if (c.getCount() > 0) {
-                Toast.makeText(this, "You have already checked in for today.", Toast.LENGTH_SHORT).show();
-                return;
+            Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM " + GlobalVariables.email + " WHERE date=?", new String[]{GlobalVariables.getCurrentDate()});
+            if (c.moveToFirst()) {
+                String pendingState = c.getString(c.getColumnIndex("pendingState"));
+                if (pendingState.equals("PENDING") || pendingState.equals("VERIFIED")) {
+                    Toast.makeText(this, "You have already checked in for today.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
             }
             Intent i = new Intent(Attendance.this, Attendance_Verification.class);
             startActivity(i);
@@ -62,7 +69,7 @@ public class Attendance extends AppCompatActivity {
 
     private void constructAttendanceElements() {
         LinearLayout attendanceStack = findViewById(R.id.attendanceStack);
-        Cursor c = attendanceDB.rawQuery("SELECT * FROM attendanceDB" + GlobalVariables.email, null);
+        Cursor c = AttendanceDB.rawQuery("SELECT * FROM attendancedbtable" + GlobalVariables.email, null);
 
         if (c.moveToFirst()) {
             do {
@@ -124,7 +131,7 @@ public class Attendance extends AppCompatActivity {
             } while (c.moveToNext());
         }
         else {
-            TextView displayNoAttendance = findViewById(R.id.displayNoAttendance);
+            TextView displayNoAttendance = findViewById(R.id.attendanceDisplayNoAttendance);
             displayNoAttendance.setText("No records found.");
             displayNoAttendance.setVisibility(View.VISIBLE);
         }

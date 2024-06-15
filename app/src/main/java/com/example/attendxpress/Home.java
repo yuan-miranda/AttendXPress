@@ -21,8 +21,7 @@ public class Home extends AppCompatActivity {
     TextView nameDisplay;
     TextView emailDisplay;
     TextView promptNameDisplay;
-    SQLiteDatabase db;
-    Intent getEmail;
+    SQLiteDatabase AttendXPressDB;
     Cursor getName;
     ImageView miniProfile;
 
@@ -38,20 +37,18 @@ public class Home extends AppCompatActivity {
         promptNameDisplay = findViewById(R.id.promptNameDisplay);
         miniProfile = findViewById(R.id.miniProfile);
 
-        db = openOrCreateDatabase("AttendXPressDB", Context.MODE_PRIVATE, null);
-        db.execSQL("CREATE TABLE IF NOT EXISTS attendxpressdb(email VARCHAR, password VARCHAR, name VARCHAR, profile_picture TEXT);");
-        getEmail = getIntent();
-        String sEmail = getEmail.getStringExtra("email") == null? GlobalVariables.email : getEmail.getStringExtra("email");
-        GlobalVariables.email = sEmail;
+        AttendXPressDB = openOrCreateDatabase("AttendXPressDB", Context.MODE_PRIVATE, null);
 
-        getName = db.rawQuery("SELECT name FROM attendxpressdb WHERE email='" + sEmail + "'", null);
+        String sEmail = GlobalVariables.email;
+
+        getName = AttendXPressDB.rawQuery("SELECT name FROM " + GlobalVariables.email + " WHERE email='" + sEmail + "'", null);
         if (getName != null) {
             nameDisplay.setText((getName.moveToFirst()) ? getName.getString(getName.getColumnIndex("name")) : "Name not found");
         }
         emailDisplay.setText(sEmail);
         promptNameDisplay.setText("Hi, " + nameDisplay.getText() + ".");
 
-        Cursor loadedProfile = db.rawQuery("SELECT profile_picture FROM attendxpressdb WHERE email='" + sEmail + "'", null);
+        Cursor loadedProfile = AttendXPressDB.rawQuery("SELECT profile_picture FROM " + GlobalVariables.email + " WHERE email='" + sEmail + "'", null);
         if (loadedProfile != null) {
             if (loadedProfile.moveToFirst()) {
                 String sProfile = loadedProfile.getString(0);
@@ -63,10 +60,8 @@ public class Home extends AppCompatActivity {
             }
         }
 
-
         viewProfile.setOnClickListener(v -> {
             Intent i = new Intent(Home.this, Profile.class);
-            i.putExtra("email", sEmail);
             startActivity(i);
         });
         checkInAttendance.setOnClickListener(v -> {

@@ -28,12 +28,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".AdminPanel"/>
         <activity android:name=".Attendance"></activity>
         <activity android:name=".Attendance_Verification"></activity>
         <activity android:name=".Attendance_Verification_Cam"></activity>
         <activity android:name=".Attendance_Verification_Check_Pending"></activity>
-        <activity android:name=".Attendance_Verification_Fingerprint"></activity>
-        <activity android:name=".Attendance_Verification_Pending"></activity>
         <activity android:name=".Attendance_Verification_Success"></activity>
         <activity android:name=".Home"></activity>
         <activity android:name=".Loading"></activity>

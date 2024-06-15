@@ -72,7 +72,6 @@ public class Attendance_Verification extends AppCompatActivity {
             @Override
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
-                Toast.makeText(Attendance_Verification.this, "Authentication succeeded!", Toast.LENGTH_SHORT).show();
                 Intent i = new Intent(Attendance_Verification.this, Attendance_Verification_Success.class);
                 startActivity(i);
             }

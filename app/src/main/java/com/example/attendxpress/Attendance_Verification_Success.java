@@ -19,7 +19,8 @@ import java.util.Locale;
 public class Attendance_Verification_Success extends AppCompatActivity {
     Button checkPendingAttendance;
     Button moveHome;
-    SQLiteDatabase attendanceDB;
+    SQLiteDatabase PendingAttendanceDB;
+    byte[] pitikImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,9 +29,14 @@ public class Attendance_Verification_Success extends AppCompatActivity {
 
         checkPendingAttendance = findViewById(R.id.checkPendingAttendance_avs);
         moveHome = findViewById(R.id.moveHome);
+        pitikImage = new byte[0];
 
-        attendanceDB = openOrCreateDatabase("attendanceDB" + GlobalVariables.email, Context.MODE_PRIVATE, null);
-        attendanceDB.execSQL("CREATE TABLE IF NOT EXISTS attendancedb(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, day TEXT NOT NULL, isPresent INTEGER NOT NULL)");
+        PendingAttendanceDB = openOrCreateDatabase("PendingAttendanceDB", Context.MODE_PRIVATE, null);
+
+        Intent intent = getIntent();
+        if (intent.hasExtra("pitikImage")) {
+            pitikImage = intent.getByteArrayExtra("pitikImage");
+        }
 
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy");
@@ -38,7 +44,7 @@ public class Attendance_Verification_Success extends AppCompatActivity {
         String currentDate = dateFormat.format(calendar.getTime());
         String dayOfWeek = dayFormat.format(calendar.getTime());
 
-        insertAttendanceData(currentDate, dayOfWeek, true);
+        insertPendingAttendanceData(currentDate, dayOfWeek, "PENDING");
 
         checkPendingAttendance.setOnClickListener(v -> {
             Intent i = new Intent(Attendance_Verification_Success.this, Attendance_Verification_Check_Pending.class);
@@ -51,11 +57,12 @@ public class Attendance_Verification_Success extends AppCompatActivity {
         });
     }
 
-    private void insertAttendanceData(String date, String day, boolean isPresent) {
+    private void insertPendingAttendanceData(String date, String day, String pendingState) {
         ContentValues cv = new ContentValues();
         cv.put("date", date);
         cv.put("day", day);
-        cv.put("isPresent", isPresent ? 1: 0);
-        attendanceDB.insert("attendanceDB" + GlobalVariables.email, null, cv);
+        cv.put("pendingState", pendingState);
+        cv.put("pitikImage", pitikImage);
+        PendingAttendanceDB.insert(GlobalVariables.email, null, cv);
     }
 }

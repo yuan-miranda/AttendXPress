@@ -1,12 +1,16 @@
 package com.example.attendxpress;
 
 import android.app.Activity;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -15,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 
 public class Attendance_Verification_Cam extends AppCompatActivity {
     Button pitik;
@@ -47,16 +52,17 @@ public class Attendance_Verification_Cam extends AppCompatActivity {
             activityResultLauncher.launch(takePhoto);
         });
         bSubmit.setOnClickListener(v -> {
-            if (imageBitmap != null) {
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                byte[] bytes = stream.toByteArray();
-
-                Intent i = new Intent(Attendance_Verification_Cam.this, Attendance_Verification_Success.class);
-                i.putExtra("profile_image", bytes);
-                startActivity(i);
+            if (imageBitmap == null) {
+                Toast.makeText(this, "Please capture an image first", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] bytes = stream.toByteArray();
+
             Intent i = new Intent(Attendance_Verification_Cam.this, Attendance_Verification_Success.class);
+            i.putExtra("pitikImage", bytes);
             startActivity(i);
         });
         moveHome.setOnClickListener(v -> {

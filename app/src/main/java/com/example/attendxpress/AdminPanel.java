@@ -1,15 +1,18 @@
 package com.example.attendxpress;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,42 +21,102 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
-public class Attendance_Verification_Check_Pending extends AppCompatActivity {
-    Button moveHome;
+public class AdminPanel extends AppCompatActivity {
+    SQLiteDatabase AttendXPressDB;
     SQLiteDatabase PendingAttendanceDB;
-//    SQLiteDatabase attendanceDB;
+    EditText adminPanelFindUser;
+    LinearLayout adminPanelPendingAttendanceStack;
+    TextView adminPanelDisplayNoAttendance;
+    Button adminPanelLogout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.attendance_verification_check_pending);
+        setContentView(R.layout.adminpanel);
 
-//        attendanceDB = openOrCreateDatabase("attendanceDB" + GlobalVariables.email, Context.MODE_PRIVATE, null);
-//        attendanceDB.execSQL("CREATE TABLE IF NOT EXISTS attendancedb(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, day TEXT NOT NULL, isPresent INTEGER NOT NULL)");
+        adminPanelFindUser = findViewById(R.id.adminPanelFindUser);
+        adminPanelPendingAttendanceStack = findViewById(R.id.adminPanelPendingAttendanceStack);
+        adminPanelDisplayNoAttendance = findViewById(R.id.adminPanelDisplayNoAttendance);
+        adminPanelLogout = findViewById(R.id.adminPanelLogout);
 
+        AttendXPressDB = openOrCreateDatabase("AttendXPressDB", Context.MODE_PRIVATE, null);
         PendingAttendanceDB = openOrCreateDatabase("PendingAttendanceDB", Context.MODE_PRIVATE, null);
 
-        constructPendingAttendanceElements();
-
-        moveHome = findViewById(R.id.moveHome);
-        moveHome.setOnClickListener(v -> {
-            Intent i = new Intent(Attendance_Verification_Check_Pending.this, Home.class);
+        adminPanelLogout.setOnClickListener(v -> {
+            Intent i = new Intent(AdminPanel.this, Login.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
         });
+
+        adminPanelFindUser.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                searchFirstUser(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
     }
 
-//    private void insertAttendanceData(String date, String day, boolean isPresent) {
-//        ContentValues cv = new ContentValues();
-//        cv.put("date", date);
-//        cv.put("day", day);
-//        cv.put("isPresent", isPresent ? 1: 0);
-//        attendanceDB.insert("attendanceDB" + GlobalVariables.email, null, cv);
-//    }
+    private void searchFirstUser(String user) {
+        adminPanelPendingAttendanceStack.removeAllViews();
 
-    private void constructPendingAttendanceElements() {
-        LinearLayout attendanceStack = findViewById(R.id.checkPendingAttendanceStack);
-        Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM " + GlobalVariables.email, null);
+        if (user.length() != 0) {
+            try {
+                Cursor findTable = AttendXPressDB.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name != 'android_metadata'", null);
+                boolean found = false;
+                if (findTable.moveToFirst()) {
+                    do {
+                        Cursor findUsers = AttendXPressDB.rawQuery("SELECT * FROM " + findTable.getString(0) + " WHERE name LIKE '%" + user + "%' OR email LIKE '%" + user + "%'", null);
+                        if (findUsers.getCount() > 0) {
+                            found = true;
+                            while (findUsers.moveToNext()) {
+                                String email = findUsers.getString(findUsers.getColumnIndex("email"));
+                                TextView userTextView = new TextView(this);
+
+                                userTextView.setText(email);
+                                userTextView.setOnClickListener(v -> {
+                                    adminPanelPendingAttendanceStack.removeAllViews();
+                                    constructPendingAttendanceElements(email);
+                                });
+
+                                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT
+                                );
+                                userTextView.setLayoutParams(params);
+                                adminPanelPendingAttendanceStack.addView(userTextView);
+                            }
+                        }
+                    } while (findTable.moveToNext());
+                }
+
+                if (!found) {
+                    adminPanelDisplayNoAttendance.setVisibility(View.VISIBLE);
+                    adminPanelDisplayNoAttendance.setText("User not found.");
+                } else {
+                    adminPanelDisplayNoAttendance.setVisibility(View.GONE);
+                }
+            } catch (Exception e) {
+                Toast.makeText(this, "Error.", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+        } else {
+            adminPanelPendingAttendanceStack.removeAllViews();
+            adminPanelDisplayNoAttendance.setVisibility(View.GONE);
+        }
+    }
+
+    private void constructPendingAttendanceElements(String user) {
+        Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM " + user, null);
 
         if (c.moveToFirst()) {
             do {
@@ -116,11 +179,11 @@ public class Attendance_Verification_Check_Pending extends AppCompatActivity {
                 constraintSet.connect(displayDate.getId(), ConstraintSet.TOP, displayDay.getId(), ConstraintSet.BOTTOM, (int) (4 * getResources().getDisplayMetrics().density));
 
                 constraintSet.applyTo(constraintLayout);
-                attendanceStack.addView(constraintLayout);
+                adminPanelPendingAttendanceStack.addView(constraintLayout);
             } while (c.moveToNext());
         }
         else {
-            TextView displayNoAttendance = findViewById(R.id.checkPendingDisplayNoAttendance);
+            TextView displayNoAttendance = findViewById(R.id.adminPanelDisplayNoAttendance);
             displayNoAttendance.setText("No records found.");
             displayNoAttendance.setVisibility(View.VISIBLE);
         }
