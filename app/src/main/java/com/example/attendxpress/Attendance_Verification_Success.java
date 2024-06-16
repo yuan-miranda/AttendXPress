@@ -44,7 +44,7 @@ public class Attendance_Verification_Success extends AppCompatActivity {
         String currentDate = dateFormat.format(calendar.getTime());
         String dayOfWeek = dayFormat.format(calendar.getTime());
 
-        insertPendingAttendanceData(currentDate, dayOfWeek, "PENDING");
+        insertPendingAttendanceData(GlobalVariables.email, currentDate, dayOfWeek, "PENDING");
 
         checkPendingAttendance.setOnClickListener(v -> {
             Intent i = new Intent(Attendance_Verification_Success.this, Attendance_Verification_Check_Pending.class);
@@ -57,12 +57,15 @@ public class Attendance_Verification_Success extends AppCompatActivity {
         });
     }
 
-    private void insertPendingAttendanceData(String date, String day, String pendingState) {
+    private void insertPendingAttendanceData(String email, String date, String day, String pendingState) {
+        PendingAttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS pending_attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, pendingState TEXT NOT NULL, pitikImage TEXT NOT NULL)");
+
         ContentValues cv = new ContentValues();
+        cv.put("email", email);
         cv.put("date", date);
         cv.put("day", day);
         cv.put("pendingState", pendingState);
         cv.put("pitikImage", pitikImage);
-        PendingAttendanceDB.insert(GlobalVariables.email, null, cv);
+        PendingAttendanceDB.insert("pending_attendance_records", null, cv);
     }
 }

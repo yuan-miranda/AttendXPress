@@ -1,6 +1,5 @@
 package com.example.attendxpress;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,7 +9,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CalendarView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,16 +34,16 @@ public class Attendance extends AppCompatActivity {
         moveHome = findViewById(R.id.moveHome);
 
         AttendanceDB = openOrCreateDatabase("AttendanceDB", Context.MODE_PRIVATE, null);
-        AttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS attendancedbtable" + GlobalVariables.email + "(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, day TEXT NOT NULL, isPresent INTEGER NOT NULL)");
+        AttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, isPresent INTEGER NOT NULL)");
 
         PendingAttendanceDB = openOrCreateDatabase("PendingAttendanceDB", Context.MODE_PRIVATE, null);
-        PendingAttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS " + GlobalVariables.email + "(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, day TEXT NOT NULL, pendingState TEXT NOT NULL, pitikImage TEXT NOT NULL)");
+        PendingAttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS pending_attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, pendingState TEXT NOT NULL, pitikImage TEXT NOT NULL)");
 
         // display the attendance stacks
         constructAttendanceElements();
 
         checkInToday.setOnClickListener(v -> {
-            Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM " + GlobalVariables.email + " WHERE date=?", new String[]{GlobalVariables.getCurrentDate()});
+            Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM pending_attendance_records WHERE email=? AND date=?", new String[]{GlobalVariables.email, GlobalVariables.getCurrentDate()});
             if (c.moveToFirst()) {
                 String pendingState = c.getString(c.getColumnIndex("pendingState"));
                 if (pendingState.equals("PENDING") || pendingState.equals("VERIFIED")) {
@@ -69,7 +67,7 @@ public class Attendance extends AppCompatActivity {
 
     private void constructAttendanceElements() {
         LinearLayout attendanceStack = findViewById(R.id.attendanceStack);
-        Cursor c = AttendanceDB.rawQuery("SELECT * FROM attendancedbtable" + GlobalVariables.email, null);
+        Cursor c = AttendanceDB.rawQuery("SELECT * FROM attendance_records WHERE email=?", new String[]{GlobalVariables.email});
 
         if (c.moveToFirst()) {
             do {
@@ -88,7 +86,7 @@ public class Attendance extends AppCompatActivity {
                 constraintLayout.setLayoutParams(layoutParams);
                 if (isPresent) {
                     constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_present, null));
-                } else if (!(isPresent)) {
+                } else {
                     constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_absent, null));
                 }
 
@@ -129,11 +127,11 @@ public class Attendance extends AppCompatActivity {
                 constraintSet.applyTo(constraintLayout);
                 attendanceStack.addView(constraintLayout);
             } while (c.moveToNext());
-        }
-        else {
+        } else {
             TextView displayNoAttendance = findViewById(R.id.attendanceDisplayNoAttendance);
             displayNoAttendance.setText("No records found.");
             displayNoAttendance.setVisibility(View.VISIBLE);
         }
+        c.close(); // Close cursor after use
     }
 }

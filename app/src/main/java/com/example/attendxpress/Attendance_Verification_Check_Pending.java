@@ -53,76 +53,80 @@ public class Attendance_Verification_Check_Pending extends AppCompatActivity {
 
     private void constructPendingAttendanceElements() {
         LinearLayout attendanceStack = findViewById(R.id.checkPendingAttendanceStack);
-        Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM " + GlobalVariables.email, null);
+        try {
+            Cursor findPendingAttendanceRecord = PendingAttendanceDB.rawQuery("SELECT * FROM pending_attendance_records WHERE email=?", new String[]{GlobalVariables.email});
+            if (findPendingAttendanceRecord.moveToFirst()) {
+                do {
+                    int id = findPendingAttendanceRecord.getInt(findPendingAttendanceRecord.getColumnIndex("id"));
+                    String date = findPendingAttendanceRecord.getString(findPendingAttendanceRecord.getColumnIndex("date"));
+                    String day = findPendingAttendanceRecord.getString(findPendingAttendanceRecord.getColumnIndex("day"));
+                    String pendingState = findPendingAttendanceRecord.getString(findPendingAttendanceRecord.getColumnIndex("pendingState"));
 
-        if (c.moveToFirst()) {
-            do {
-                int id = c.getInt(c.getColumnIndex("id"));
-                String date = c.getString(c.getColumnIndex("date"));
-                String day = c.getString(c.getColumnIndex("day"));
-                String pendingState = c.getString(c.getColumnIndex("pendingState"));
+                    // create ConstraintLayout
+                    ConstraintLayout constraintLayout = new ConstraintLayout(this);
+                    LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            (int) (64 * getResources().getDisplayMetrics().density)
+                    );
+                    layoutParams.setMargins(2, 2, 2, 2);
+                    constraintLayout.setLayoutParams(layoutParams);
 
-                // create ConstraintLayout
-                ConstraintLayout constraintLayout = new ConstraintLayout(this);
-                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        (int) (64 * getResources().getDisplayMetrics().density)
-                );
-                layoutParams.setMargins(2, 2, 2, 2);
-                constraintLayout.setLayoutParams(layoutParams);
+                    if (pendingState.equals("PENDING")) {
+                        constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_none, null));
+                    }
+                    else if (pendingState.equals("FAILED")) {
+                        constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_absent, null));
+                    }
+                    else if (pendingState.equals("VERIFIED")) {
+                        constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_present, null));
+                    }
 
-                if (pendingState.equals("PENDING")) {
-                    constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_none, null));
-                }
-                else if (pendingState.equals("FAILED")) {
-                    constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_absent, null));
-                }
-                else if (pendingState.equals("VERIFIED")) {
-                    constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_present, null));
-                }
+                    TextView displayDate = new TextView(this);
+                    displayDate.setId(View.generateViewId());
+                    displayDate.setText(date);
+                    displayDate.setTextColor(Color.BLACK);
 
-                TextView displayDate = new TextView(this);
-                displayDate.setId(View.generateViewId());
-                displayDate.setText(date);
-                displayDate.setTextColor(Color.BLACK);
+                    TextView displayDay = new TextView(this);
+                    displayDay.setId(View.generateViewId());
+                    displayDay.setText(day.toUpperCase());
+                    displayDay.setTextSize(24);
+                    displayDay.setTextColor(Color.BLACK);
 
-                TextView displayDay = new TextView(this);
-                displayDay.setId(View.generateViewId());
-                displayDay.setText(day.toUpperCase());
-                displayDay.setTextSize(24);
-                displayDay.setTextColor(Color.BLACK);
+                    TextView displayIsPresentState = new TextView(this);
+                    displayIsPresentState.setId(View.generateViewId());
+                    displayIsPresentState.setText(pendingState);
+                    displayIsPresentState.setTextSize(20);
+                    displayIsPresentState.setTextColor(Color.BLACK);
 
-                TextView displayIsPresentState = new TextView(this);
-                displayIsPresentState.setId(View.generateViewId());
-                displayIsPresentState.setText(pendingState);
-                displayIsPresentState.setTextSize(20);
-                displayIsPresentState.setTextColor(Color.BLACK);
+                    constraintLayout.addView(displayDate);
+                    constraintLayout.addView(displayDay);
+                    constraintLayout.addView(displayIsPresentState);
 
-                constraintLayout.addView(displayDate);
-                constraintLayout.addView(displayDay);
-                constraintLayout.addView(displayIsPresentState);
+                    ConstraintSet constraintSet = new ConstraintSet();
+                    constraintSet.clone(constraintLayout);
 
-                ConstraintSet constraintSet = new ConstraintSet();
-                constraintSet.clone(constraintLayout);
+                    constraintSet.connect(displayDay.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, (int) (24 * getResources().getDisplayMetrics().density));
+                    constraintSet.connect(displayDay.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, (int) (8 * getResources().getDisplayMetrics().density));
 
-                constraintSet.connect(displayDay.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, (int) (24 * getResources().getDisplayMetrics().density));
-                constraintSet.connect(displayDay.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, (int) (8 * getResources().getDisplayMetrics().density));
+                    constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, (int) (24 * getResources().getDisplayMetrics().density));
+                    constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+                    constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
 
-                constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, (int) (24 * getResources().getDisplayMetrics().density));
-                constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-                constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+                    constraintSet.connect(displayDate.getId(), ConstraintSet.START, displayDay.getId(), ConstraintSet.START);
+                    constraintSet.connect(displayDate.getId(), ConstraintSet.TOP, displayDay.getId(), ConstraintSet.BOTTOM, (int) (4 * getResources().getDisplayMetrics().density));
 
-                constraintSet.connect(displayDate.getId(), ConstraintSet.START, displayDay.getId(), ConstraintSet.START);
-                constraintSet.connect(displayDate.getId(), ConstraintSet.TOP, displayDay.getId(), ConstraintSet.BOTTOM, (int) (4 * getResources().getDisplayMetrics().density));
-
-                constraintSet.applyTo(constraintLayout);
-                attendanceStack.addView(constraintLayout);
-            } while (c.moveToNext());
-        }
-        else {
-            TextView displayNoAttendance = findViewById(R.id.checkPendingDisplayNoAttendance);
-            displayNoAttendance.setText("No records found.");
-            displayNoAttendance.setVisibility(View.VISIBLE);
+                    constraintSet.applyTo(constraintLayout);
+                    attendanceStack.addView(constraintLayout);
+                } while (findPendingAttendanceRecord.moveToNext());
+            }
+            else {
+                TextView displayNoAttendance = findViewById(R.id.checkPendingDisplayNoAttendance);
+                displayNoAttendance.setText("No records found.");
+                displayNoAttendance.setVisibility(View.VISIBLE);
+            }
+            findPendingAttendanceRecord.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

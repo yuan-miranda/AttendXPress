@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -71,32 +70,27 @@ public class AdminPanel extends AppCompatActivity {
 
         if (user.length() != 0) {
             try {
-                Cursor findTable = AttendXPressDB.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name != 'android_metadata'", null);
+                Cursor findUsers = AttendXPressDB.rawQuery("SELECT * FROM users WHERE email LIKE '%" + user + "%' OR name LIKE '%" + user + "%'", null);
                 boolean found = false;
-                if (findTable.moveToFirst()) {
+                if (findUsers.moveToFirst()) {
                     do {
-                        Cursor findUsers = AttendXPressDB.rawQuery("SELECT * FROM " + findTable.getString(0) + " WHERE name LIKE '%" + user + "%' OR email LIKE '%" + user + "%'", null);
-                        if (findUsers.getCount() > 0) {
-                            found = true;
-                            while (findUsers.moveToNext()) {
-                                String email = findUsers.getString(findUsers.getColumnIndex("email"));
-                                TextView userTextView = new TextView(this);
+                        String email = findUsers.getString(findUsers.getColumnIndex("email"));
+                        TextView userTextView = new TextView(this);
+                        userTextView.setText(email);
+                        userTextView.setOnClickListener(v -> {
+                            adminPanelPendingAttendanceStack.removeAllViews();
+                            constructPendingAttendanceElements(email);
+                        });
 
-                                userTextView.setText(email);
-                                userTextView.setOnClickListener(v -> {
-                                    adminPanelPendingAttendanceStack.removeAllViews();
-                                    constructPendingAttendanceElements(email);
-                                });
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                        );
+                        userTextView.setLayoutParams(params);
+                        adminPanelPendingAttendanceStack.addView(userTextView);
 
-                                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        LinearLayout.LayoutParams.WRAP_CONTENT
-                                );
-                                userTextView.setLayoutParams(params);
-                                adminPanelPendingAttendanceStack.addView(userTextView);
-                            }
-                        }
-                    } while (findTable.moveToNext());
+                        found = true;
+                    } while (findUsers.moveToNext());
                 }
 
                 if (!found) {
@@ -105,6 +99,8 @@ public class AdminPanel extends AppCompatActivity {
                 } else {
                     adminPanelDisplayNoAttendance.setVisibility(View.GONE);
                 }
+
+                findUsers.close();
             } catch (Exception e) {
                 Toast.makeText(this, "Error.", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
@@ -115,77 +111,80 @@ public class AdminPanel extends AppCompatActivity {
         }
     }
 
-    private void constructPendingAttendanceElements(String user) {
-        Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM " + user, null);
+    private void constructPendingAttendanceElements(String email) {
+        adminPanelPendingAttendanceStack.removeAllViews();
 
-        if (c.moveToFirst()) {
-            do {
-                int id = c.getInt(c.getColumnIndex("id"));
-                String date = c.getString(c.getColumnIndex("date"));
-                String day = c.getString(c.getColumnIndex("day"));
-                String pendingState = c.getString(c.getColumnIndex("pendingState"));
+        try {
+            Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM pending_attendance_records WHERE email=?", new String[]{email});
 
-                // create ConstraintLayout
-                ConstraintLayout constraintLayout = new ConstraintLayout(this);
-                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        (int) (64 * getResources().getDisplayMetrics().density)
-                );
-                layoutParams.setMargins(2, 2, 2, 2);
-                constraintLayout.setLayoutParams(layoutParams);
+            if (c.moveToFirst()) {
+                do {
+                    int id = c.getInt(c.getColumnIndex("id"));
+                    String date = c.getString(c.getColumnIndex("date"));
+                    String day = c.getString(c.getColumnIndex("day"));
+                    String pendingState = c.getString(c.getColumnIndex("pendingState"));
 
-                if (pendingState.equals("PENDING")) {
-                    constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_none, null));
-                }
-                else if (pendingState.equals("FAILED")) {
-                    constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_absent, null));
-                }
-                else if (pendingState.equals("VERIFIED")) {
-                    constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_present, null));
-                }
+                    // create ConstraintLayout
+                    ConstraintLayout constraintLayout = new ConstraintLayout(this);
+                    LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            (int) (64 * getResources().getDisplayMetrics().density)
+                    );
+                    layoutParams.setMargins(2, 2, 2, 2);
+                    constraintLayout.setLayoutParams(layoutParams);
 
-                TextView displayDate = new TextView(this);
-                displayDate.setId(View.generateViewId());
-                displayDate.setText(date);
-                displayDate.setTextColor(Color.BLACK);
+                    if (pendingState.equals("PENDING")) {
+                        constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_none, null));
+                    } else if (pendingState.equals("FAILED")) {
+                        constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_absent, null));
+                    } else if (pendingState.equals("VERIFIED")) {
+                        constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_present, null));
+                    }
 
-                TextView displayDay = new TextView(this);
-                displayDay.setId(View.generateViewId());
-                displayDay.setText(day.toUpperCase());
-                displayDay.setTextSize(24);
-                displayDay.setTextColor(Color.BLACK);
+                    TextView displayDate = new TextView(this);
+                    displayDate.setId(View.generateViewId());
+                    displayDate.setText(date);
+                    displayDate.setTextColor(Color.BLACK);
 
-                TextView displayIsPresentState = new TextView(this);
-                displayIsPresentState.setId(View.generateViewId());
-                displayIsPresentState.setText(pendingState);
-                displayIsPresentState.setTextSize(20);
-                displayIsPresentState.setTextColor(Color.BLACK);
+                    TextView displayDay = new TextView(this);
+                    displayDay.setId(View.generateViewId());
+                    displayDay.setText(day.toUpperCase());
+                    displayDay.setTextSize(24);
+                    displayDay.setTextColor(Color.BLACK);
 
-                constraintLayout.addView(displayDate);
-                constraintLayout.addView(displayDay);
-                constraintLayout.addView(displayIsPresentState);
+                    TextView displayIsPresentState = new TextView(this);
+                    displayIsPresentState.setId(View.generateViewId());
+                    displayIsPresentState.setText(pendingState);
+                    displayIsPresentState.setTextSize(20);
+                    displayIsPresentState.setTextColor(Color.BLACK);
 
-                ConstraintSet constraintSet = new ConstraintSet();
-                constraintSet.clone(constraintLayout);
+                    constraintLayout.addView(displayDate);
+                    constraintLayout.addView(displayDay);
+                    constraintLayout.addView(displayIsPresentState);
 
-                constraintSet.connect(displayDay.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, (int) (24 * getResources().getDisplayMetrics().density));
-                constraintSet.connect(displayDay.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, (int) (8 * getResources().getDisplayMetrics().density));
+                    ConstraintSet constraintSet = new ConstraintSet();
+                    constraintSet.clone(constraintLayout);
 
-                constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, (int) (24 * getResources().getDisplayMetrics().density));
-                constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-                constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+                    constraintSet.connect(displayDay.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, (int) (24 * getResources().getDisplayMetrics().density));
+                    constraintSet.connect(displayDay.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, (int) (8 * getResources().getDisplayMetrics().density));
 
-                constraintSet.connect(displayDate.getId(), ConstraintSet.START, displayDay.getId(), ConstraintSet.START);
-                constraintSet.connect(displayDate.getId(), ConstraintSet.TOP, displayDay.getId(), ConstraintSet.BOTTOM, (int) (4 * getResources().getDisplayMetrics().density));
+                    constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, (int) (24 * getResources().getDisplayMetrics().density));
+                    constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+                    constraintSet.connect(displayIsPresentState.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
 
-                constraintSet.applyTo(constraintLayout);
-                adminPanelPendingAttendanceStack.addView(constraintLayout);
-            } while (c.moveToNext());
-        }
-        else {
-            TextView displayNoAttendance = findViewById(R.id.adminPanelDisplayNoAttendance);
-            displayNoAttendance.setText("No records found.");
-            displayNoAttendance.setVisibility(View.VISIBLE);
+                    constraintSet.connect(displayDate.getId(), ConstraintSet.START, displayDay.getId(), ConstraintSet.START);
+                    constraintSet.connect(displayDate.getId(), ConstraintSet.TOP, displayDay.getId(), ConstraintSet.BOTTOM, (int) (4 * getResources().getDisplayMetrics().density));
+
+                    constraintSet.applyTo(constraintLayout);
+                    adminPanelPendingAttendanceStack.addView(constraintLayout);
+                } while (c.moveToNext());
+            }
+            else {
+                adminPanelDisplayNoAttendance.setVisibility(View.VISIBLE);
+                adminPanelDisplayNoAttendance.setText("No records found.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

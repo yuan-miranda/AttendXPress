@@ -41,14 +41,19 @@ public class Home extends AppCompatActivity {
 
         String sEmail = GlobalVariables.email;
 
-        getName = AttendXPressDB.rawQuery("SELECT name FROM " + GlobalVariables.email + " WHERE email='" + sEmail + "'", null);
-        if (getName != null) {
-            nameDisplay.setText((getName.moveToFirst()) ? getName.getString(getName.getColumnIndex("name")) : "Name not found");
+        getName = AttendXPressDB.rawQuery("SELECT name FROM users WHERE email=?", new String[]{sEmail});
+        if (getName != null && getName.moveToFirst()) {
+            String userName = getName.getString(getName.getColumnIndex("name"));
+            nameDisplay.setText(userName);
+            promptNameDisplay.setText("Hi, " + userName + ".");
+        } else {
+            nameDisplay.setText("Name not found");
+            promptNameDisplay.setText("Hi there!");
         }
+        getName.close();
         emailDisplay.setText(sEmail);
-        promptNameDisplay.setText("Hi, " + nameDisplay.getText() + ".");
 
-        Cursor loadedProfile = AttendXPressDB.rawQuery("SELECT profile_picture FROM " + GlobalVariables.email + " WHERE email='" + sEmail + "'", null);
+        Cursor loadedProfile = AttendXPressDB.rawQuery("SELECT profile_picture FROM users WHERE email=?", new String[]{sEmail});
         if (loadedProfile != null) {
             if (loadedProfile.moveToFirst()) {
                 String sProfile = loadedProfile.getString(0);
@@ -72,8 +77,6 @@ public class Home extends AppCompatActivity {
 
     private Bitmap decodeUri(Uri profileUri) {
         try {
-            Log.e("Profile", "Decoding URI: " + profileUri.toString());
-
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             BitmapFactory.decodeStream(getContentResolver().openInputStream(profileUri), null, options);
@@ -89,11 +92,6 @@ public class Home extends AppCompatActivity {
             o2.inSampleSize = scale;
 
             Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(profileUri), null, o2);
-            if(bitmap == null)
-                Log.e("Profile", "Decoding failed: bitmap is null");
-            else
-                Log.e("Profile", "Decoding successful");
-
             return bitmap;
         } catch (Exception e) {
             Log.e("Profile", "Decoding error: " + e.getMessage());

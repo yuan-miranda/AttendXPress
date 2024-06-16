@@ -52,13 +52,13 @@ public class Profile extends AppCompatActivity {
 
         String sEmail = GlobalVariables.email;
 
-        getName = AttendXPressDB.rawQuery("SELECT name FROM " + GlobalVariables.email + " WHERE email='" + sEmail + "'", null);
+        getName = AttendXPressDB.rawQuery("SELECT name FROM users WHERE email=?", new String[]{sEmail});
         if (getName != null) {
             nameDisplay.setText((getName.moveToFirst()) ? getName.getString(getName.getColumnIndex("name")) : "Name not found");
         }
         emailDisplay.setText(sEmail);
 
-        Cursor loadedProfile = AttendXPressDB.rawQuery("SELECT profile_picture FROM " + GlobalVariables.email + " WHERE email='" + sEmail + "'", null);
+        Cursor loadedProfile = AttendXPressDB.rawQuery("SELECT profile_picture FROM users WHERE email=?", new String[]{sEmail});
         if (loadedProfile != null) {
             if (loadedProfile.moveToFirst()) {
                 String sProfile = loadedProfile.getString(0);
@@ -69,6 +69,7 @@ public class Profile extends AppCompatActivity {
                 }
             }
         }
+        loadedProfile.close();
 
         activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK && result.getData() != null) {
@@ -76,7 +77,7 @@ public class Profile extends AppCompatActivity {
                 if (uri != null) {
                     getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     profile.setImageURI(uri);
-                    AttendXPressDB.execSQL("UPDATE " + GlobalVariables.email + " SET profile_picture='" + uri + "' WHERE email='" + sEmail + "'");
+                    AttendXPressDB.execSQL("UPDATE users SET profile_picture='" + uri + "' WHERE email='" + sEmail + "'");
                 }
             }
         });
@@ -106,7 +107,7 @@ public class Profile extends AppCompatActivity {
                     Toast.makeText(this, "New name cant be empty.", Toast.LENGTH_SHORT).show();
                 } else {
                     nameDisplay.setText(newName);
-                    AttendXPressDB.execSQL("UPDATE " + GlobalVariables.email + " SET name='" + newName + "' WHERE email='" + sEmail + "'");
+                    AttendXPressDB.execSQL("UPDATE users SET name='" + newName + "' WHERE email='" + sEmail + "'");
                 }
             }));
             builder.setNegativeButton(android.R.string.cancel, ((dialog, which) -> dialog.cancel()));
@@ -122,8 +123,6 @@ public class Profile extends AppCompatActivity {
 
     private Bitmap decodeUri(Uri profileUri) {
         try {
-            Log.e("Profile", "Decoding URI: " + profileUri.toString());
-
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             BitmapFactory.decodeStream(getContentResolver().openInputStream(profileUri), null, options);
@@ -139,11 +138,6 @@ public class Profile extends AppCompatActivity {
             o2.inSampleSize = scale;
 
             Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(profileUri), null, o2);
-            if(bitmap == null)
-                Log.e("Profile", "Decoding failed: bitmap is null");
-            else
-                Log.e("Profile", "Decoding successful");
-
             return bitmap;
         } catch (Exception e) {
             Log.e("Profile", "Decoding error: " + e.getMessage());
