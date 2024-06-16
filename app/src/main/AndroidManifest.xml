@@ -29,6 +29,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".AdminPanel"/>
+        <activity android:name=".AdminPanelPendingAttendanceDetail"/>
         <activity android:name=".Attendance"></activity>
         <activity android:name=".Attendance_Verification"></activity>
         <activity android:name=".Attendance_Verification_Cam"></activity>

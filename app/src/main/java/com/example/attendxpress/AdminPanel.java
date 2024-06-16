@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
@@ -79,7 +81,7 @@ public class AdminPanel extends AppCompatActivity {
                         userTextView.setText(email);
                         userTextView.setOnClickListener(v -> {
                             adminPanelPendingAttendanceStack.removeAllViews();
-                            constructPendingAttendanceElements(email);
+                            constructPendingAttendanceElements(email); // Passing email directly
                         });
 
                         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -116,13 +118,22 @@ public class AdminPanel extends AppCompatActivity {
 
         try {
             Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM pending_attendance_records WHERE email=?", new String[]{email});
+            Cursor attendxpressDB = AttendXPressDB.rawQuery("SELECT * FROM users WHERE email=?", new String[]{email});
 
             if (c.moveToFirst()) {
+                attendxpressDB.moveToFirst();
                 do {
                     int id = c.getInt(c.getColumnIndex("id"));
                     String date = c.getString(c.getColumnIndex("date"));
                     String day = c.getString(c.getColumnIndex("day"));
                     String pendingState = c.getString(c.getColumnIndex("pendingState"));
+                    byte[] pitikImageBytes = c.getBlob(c.getColumnIndex("pitikImage"));
+                    Bitmap pitikBitmap = BitmapFactory.decodeByteArray(pitikImageBytes, 0, pitikImageBytes.length);
+
+                    String userEmail = attendxpressDB.getString(attendxpressDB.getColumnIndex("email"));
+                    String userName = attendxpressDB.getString(attendxpressDB.getColumnIndex("name"));
+                    String userProfileUri = attendxpressDB.getString(attendxpressDB.getColumnIndex("profile_picture"));
+
 
                     // create ConstraintLayout
                     ConstraintLayout constraintLayout = new ConstraintLayout(this);
@@ -177,6 +188,16 @@ public class AdminPanel extends AppCompatActivity {
 
                     constraintSet.applyTo(constraintLayout);
                     adminPanelPendingAttendanceStack.addView(constraintLayout);
+
+                    constraintLayout.setOnClickListener(v -> {
+                        Intent intent = new Intent(AdminPanel.this, AdminPanelPendingAttendanceDetail.class);
+                        intent.putExtra("userProfileUri", userProfileUri);
+                        intent.putExtra("pitikBitmap", pitikBitmap);
+                        intent.putExtra("userEmail", userEmail);
+                        intent.putExtra("date", date);
+                        intent.putExtra("userName", userName);
+                        startActivity(intent);
+                    });
                 } while (c.moveToNext());
             }
             else {
@@ -184,6 +205,7 @@ public class AdminPanel extends AppCompatActivity {
                 adminPanelDisplayNoAttendance.setText("No records found.");
             }
         } catch (Exception e) {
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
     }
