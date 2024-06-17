@@ -50,28 +50,22 @@ public class AdminPanel extends AppCompatActivity {
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
         });
-
         adminPanelFindUser.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
             }
-
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 searchFirstUser(s.toString());
             }
-
             @Override
             public void afterTextChanged(Editable s) {
-
             }
         });
     }
 
     private void searchFirstUser(String user) {
         adminPanelPendingAttendanceStack.removeAllViews();
-
         if (user.length() != 0) {
             try {
                 Cursor findUsers = AttendXPressDB.rawQuery("SELECT * FROM users WHERE email LIKE '%" + user + "%' OR name LIKE '%" + user + "%'", null);
@@ -97,7 +91,6 @@ public class AdminPanel extends AppCompatActivity {
                         found = true;
                     } while (findUsers.moveToNext());
                 }
-
                 if (!found) {
                     adminPanelDisplayNoAttendance.setVisibility(View.VISIBLE);
                     adminPanelDisplayNoAttendance.setText("User not found.");
@@ -117,7 +110,6 @@ public class AdminPanel extends AppCompatActivity {
 
     private void constructPendingAttendanceElements(String email) {
         adminPanelPendingAttendanceStack.removeAllViews();
-
         try {
             Cursor pendingattendanceDB = PendingAttendanceDB.rawQuery("SELECT * FROM pending_attendance_records WHERE email=?", new String[]{email});
             Cursor attendxpressDB = AttendXPressDB.rawQuery("SELECT * FROM users WHERE email=?", new String[]{email});

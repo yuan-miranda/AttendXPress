@@ -5,38 +5,47 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/viewProfile"
+    <TextView
+        android:id="@+id/emailDisplay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="View Profile"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="8dp"
+        android:text="Email"
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/miniProfile"
+        app:layout_constraintTop_toTopOf="@+id/miniProfile" />
+
+    <TextView
+        android:id="@+id/nameDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Name"
+        app:layout_constraintStart_toStartOf="@+id/emailDisplay"
+        app:layout_constraintTop_toBottomOf="@+id/emailDisplay" />
+
+    <ImageView
+        android:id="@+id/miniProfile"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.711" />
+        app:srcCompat="@drawable/baseline_android_100" />
 
     <Button
         android:id="@+id/checkInAttendance"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Check In Attendance"
-        app:layout_constraintEnd_toEndOf="@+id/viewProfile"
-        app:layout_constraintStart_toStartOf="@+id/viewProfile"
-        app:layout_constraintTop_toBottomOf="@+id/viewProfile" />
-
-    <TextView
-        android:id="@+id/promptNameDisplay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="56dp"
-        android:layout_marginTop="64dp"
-        android:text="Hi, [NAME]."
-        android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/viewProfile"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.599" />
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="16dp"
+        android:text="Check In"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.395"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/textView3"
@@ -48,42 +57,13 @@
         app:layout_constraintTop_toBottomOf="@+id/promptNameDisplay" />
 
     <TextView
-        android:id="@+id/nameDisplay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="[NAME]"
-        app:layout_constraintStart_toEndOf="@+id/miniProfile"
-        app:layout_constraintTop_toTopOf="@+id/miniProfile" />
-
-    <TextView
-        android:id="@+id/emailDisplay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="[Email]"
-        app:layout_constraintStart_toStartOf="@+id/nameDisplay"
-        app:layout_constraintTop_toBottomOf="@+id/nameDisplay" />
-
-    <TextView
-        android:id="@+id/textView6"
+        android:id="@+id/promptNameDisplay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="AttendXPress"
-        android:textSize="30sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/miniProfile"
-        android:layout_width="75dp"
-        android:layout_height="75dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="150dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/defaultprofile200x200bgl" />
+        android:text="Hi, [NAME]."
+        android:textSize="40dp"
+        app:layout_constraintStart_toStartOf="@+id/miniProfile"
+        app:layout_constraintTop_toBottomOf="@+id/miniProfile" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -12,6 +12,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class Login extends AppCompatActivity {
     EditText inputEmail;
     EditText inputPassword;
@@ -24,6 +27,7 @@ public class Login extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
+        getSupportActionBar().hide();
 
         inputEmail = findViewById(R.id.inputEmail);
         inputPassword = findViewById(R.id.inputPassword);
@@ -47,14 +51,18 @@ public class Login extends AppCompatActivity {
                 return;
             }
 
-            if (inputEmail.getText().toString().equals("admin@gmail.com")) {
-                Intent i = new Intent(Login.this, AdminPanel.class);
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(i);
+            String email = inputEmail.getText().toString().trim();
+            if (!isValidEmail(email)) {
+                Toast.makeText(this, "Invalid email format.", Toast.LENGTH_SHORT).show();
+                return;
             }
-            else {
+
+            if (email.equals("admin@gmail.com")) {
+                Intent i = new Intent(Login.this, Loading.class);
+                i.putExtra("loginType", "admin");
+                startActivity(i);
+            } else {
                 // check for user email if it is registered.
-                String email = inputEmail.getText().toString();
                 Cursor findUserEmail = AttendXPressDB.rawQuery("SELECT * FROM users WHERE email=?", new String[]{email});
                 if (findUserEmail.getCount() == 0) {
                     Toast.makeText(this, "The email given does not exist on our database.", Toast.LENGTH_SHORT).show();
@@ -75,53 +83,31 @@ public class Login extends AppCompatActivity {
 
                 GlobalVariables.email = email;
                 Intent i = new Intent(Login.this, Loading.class);
+                i.putExtra("loginType", "user");
                 startActivity(i);
             }
         });
+
         bRegister.setOnClickListener(v -> {
-            if (inputEmail.length() == 0 || inputPassword.length() == 0) {
-                Toast.makeText(this, "Input fields are empty.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (inputEmail.getText().toString().equals("admin@gmail.com")) {
-                Toast.makeText(this, "Admin account cannot be registered.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            String email = inputEmail.getText().toString();
-            GlobalVariables.email = email;
-            String password = inputPassword.getText().toString();
-
-            // change this to handle valid email format instead later.
-            if (email.contains(" ") || password.contains(" ")) {
-                Toast.makeText(this, "Input fields cannot contain spaces.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Cursor checkUserExists = AttendXPressDB.rawQuery("SELECT * FROM users WHERE email=?", new String[]{email});
-            if (checkUserExists.getCount() != 0) {
-                Toast.makeText(this, "The email is already registered.", Toast.LENGTH_SHORT).show();
-                checkUserExists.close();
-                return;
-            }
-            checkUserExists.close();
-
-            AttendXPressDB.execSQL("INSERT INTO users VALUES(?, ?, ?, ?)", new Object[]{email, password, "user" + password, null});
-            Toast.makeText(this, "Registered successfully.", Toast.LENGTH_SHORT).show();
+            registerUser(inputEmail.getText().toString().trim(), inputPassword.getText().toString().trim());
         });
+
         bForgotPassword.setOnClickListener(v -> {
             if (inputEmail.length() == 0) {
                 Toast.makeText(this, "Input fields are empty.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if (inputEmail.getText().toString().equals("admin@gmail.com")) {
-                Toast.makeText(this, "Admin password cannot be viewed.", Toast.LENGTH_SHORT).show();
+            String email = inputEmail.getText().toString().trim();
+            if (!isValidEmail(email)) {
+                Toast.makeText(this, "Invalid email format.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            String email = inputEmail.getText().toString();
+            if (email.equals("admin@gmail.com")) {
+                Toast.makeText(this, "Admin password cannot be viewed.", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             // check if the user exist in the database before getting the password.
             Cursor checkUserExists = AttendXPressDB.rawQuery("SELECT * FROM users WHERE email=?", new String[]{email});
@@ -148,5 +134,47 @@ public class Login extends AppCompatActivity {
             }
             getUserPassword.close();
         });
+    }
+
+    private boolean isValidEmail(String email) {
+        String emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
+        Pattern pattern = Pattern.compile(emailPattern);
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
+    }
+
+    private void registerUser(String email, String password) {
+        if (email.length() == 0 || email.length() == 0) {
+            Toast.makeText(this, "Input fields are empty.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            Toast.makeText(this, "Invalid email format.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (email.equals("admin@gmail.com")) {
+            Toast.makeText(this, "Admin account cannot be registered.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        GlobalVariables.email = email;
+        // change this to handle valid email format instead later.
+        if (email.contains(" ") || password.contains(" ")) {
+            Toast.makeText(this, "Input fields cannot contain spaces.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Cursor checkUserExists = AttendXPressDB.rawQuery("SELECT * FROM users WHERE email=?", new String[]{email});
+        if (checkUserExists.getCount() != 0) {
+            Toast.makeText(this, "The email is already registered.", Toast.LENGTH_SHORT).show();
+            checkUserExists.close();
+            return;
+        }
+        checkUserExists.close();
+
+        AttendXPressDB.execSQL("INSERT INTO users VALUES(?, ?, ?, ?)", new Object[]{email, password, "user" + password, null});
+        Toast.makeText(this, "Registered successfully.", Toast.LENGTH_SHORT).show();
     }
 }

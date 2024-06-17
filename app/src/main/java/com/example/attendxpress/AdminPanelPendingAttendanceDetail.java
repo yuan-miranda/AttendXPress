@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -31,6 +32,7 @@ public class AdminPanelPendingAttendanceDetail extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.adminpanel_pending_attendance_detail);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         adminPanelUserProfile = findViewById(R.id.adminPanelUserProfile);
         adminPanelPitikImage = findViewById(R.id.adminPanelPitikImage);
@@ -108,5 +110,15 @@ public class AdminPanelPendingAttendanceDetail extends AppCompatActivity {
         cv.put("day", day);
         cv.put("isPresent", isPresent ? 1: 0);
         AttendanceDB.insert("attendance_records", null, cv);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                getOnBackPressedDispatcher().onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

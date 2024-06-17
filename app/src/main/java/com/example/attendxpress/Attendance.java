@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -20,7 +21,7 @@ import androidx.constraintlayout.widget.ConstraintSet;
 public class Attendance extends AppCompatActivity {
     Button checkInToday;
     Button checkPendingAttendance;
-    Button moveHome;
+    LinearLayout attendanceStack;
     SQLiteDatabase AttendanceDB;
     SQLiteDatabase PendingAttendanceDB;
 
@@ -28,11 +29,11 @@ public class Attendance extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.attendance);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         checkInToday = findViewById(R.id.checkInToday);
         checkPendingAttendance = findViewById(R.id.checkPendingAttendance);
-        moveHome = findViewById(R.id.moveHome);
-
+        attendanceStack = findViewById(R.id.attendanceStack);
         AttendanceDB = openOrCreateDatabase("AttendanceDB", Context.MODE_PRIVATE, null);
         AttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, isPresent INTEGER NOT NULL)");
         PendingAttendanceDB = openOrCreateDatabase("PendingAttendanceDB", Context.MODE_PRIVATE, null);
@@ -47,14 +48,18 @@ public class Attendance extends AppCompatActivity {
 
             if (findUserPendingAttendance.moveToFirst()) {
                 String pendingState = findUserPendingAttendance.getString(findUserPendingAttendance.getColumnIndex("pendingState"));
+
                 if (pendingState.equals("PENDING")) {
                     Toast.makeText(this, "You have pending attendance verification. Please wait.", Toast.LENGTH_SHORT).show();
+                    findUserPendingAttendance.close();
+                    findUserAttendance.close();
+                    return;
                 } else if (pendingState.equals("VERIFIED") || findUserAttendance.moveToFirst()) {
                     Toast.makeText(this, "You have already checked in for today.", Toast.LENGTH_SHORT).show();
+                    findUserPendingAttendance.close();
+                    findUserAttendance.close();
+                    return;
                 }
-                findUserPendingAttendance.close();
-                findUserAttendance.close();
-                return;
             }
             findUserPendingAttendance.close();
             findUserAttendance.close();
@@ -65,15 +70,9 @@ public class Attendance extends AppCompatActivity {
             Intent i = new Intent(Attendance.this, Attendance_Verification_Check_Pending.class);
             startActivity(i);
         });
-        moveHome.setOnClickListener(v -> {
-            Intent i = new Intent(Attendance.this, Home.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(i);
-        });
     }
 
     private void constructAttendanceElements() {
-        LinearLayout attendanceStack = findViewById(R.id.attendanceStack);
         Cursor c = AttendanceDB.rawQuery("SELECT * FROM attendance_records WHERE email=?", new String[]{GlobalVariables.email});
 
         if (c.moveToFirst()) {
@@ -140,5 +139,23 @@ public class Attendance extends AppCompatActivity {
             displayNoAttendance.setVisibility(View.VISIBLE);
         }
         c.close(); // Close cursor after use
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                getOnBackPressedDispatcher().onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        attendanceStack.removeAllViews();
+        constructAttendanceElements();
+
     }
 }

@@ -20,6 +20,7 @@ public class Loading extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.loading);
+        getSupportActionBar().hide();
 
         requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), permissions -> {
             if (permissions.containsValue(false)) {
@@ -27,7 +28,13 @@ public class Loading extends AppCompatActivity {
                 finish();
             } else {
                 new Handler().postDelayed(() -> {
-                    Intent i = new Intent(Loading.this, Home.class);
+                    String loginType = getIntent().getStringExtra("loginType").toString();
+                    Intent i;
+                    if (loginType.equals("admin")) {
+                        i =  new Intent(Loading.this, AdminPanel.class);
+                    } else {
+                        i = new Intent(Loading.this, Home.class);
+                    }
                     i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(i);
                 }, 2000);

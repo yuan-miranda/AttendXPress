@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -16,7 +17,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class Home extends AppCompatActivity {
-    Button viewProfile;
     Button checkInAttendance;
     TextView nameDisplay;
     TextView emailDisplay;
@@ -29,7 +29,6 @@ public class Home extends AppCompatActivity {
         super.onCreate(savedIntanceState);
         setContentView(R.layout.home);
 
-        viewProfile = findViewById(R.id.viewProfile);
         checkInAttendance = findViewById(R.id.checkInAttendance);
         nameDisplay = findViewById(R.id.nameDisplay);
         emailDisplay = findViewById(R.id.emailDisplay);
@@ -39,6 +38,17 @@ public class Home extends AppCompatActivity {
         AttendXPressDB = openOrCreateDatabase("AttendXPressDB", Context.MODE_PRIVATE, null);
         AttendXPressDB.execSQL("CREATE TABLE IF NOT EXISTS users(email VARCHAR PRIMARY KEY, password VARCHAR, name VARCHAR, profile_picture TEXT);");
 
+        miniProfile.setOnClickListener(v -> {
+            Intent i = new Intent(Home.this, Profile.class);
+            startActivity(i);
+        });
+        checkInAttendance.setOnClickListener(v -> {
+            Intent i = new Intent(Home.this, Attendance.class);
+            startActivity(i);
+        });
+    }
+
+    private void updateHome() {
         String sEmail = GlobalVariables.email;
 
         Cursor getName = AttendXPressDB.rawQuery("SELECT name FROM users WHERE email=?", new String[]{sEmail});
@@ -65,14 +75,6 @@ public class Home extends AppCompatActivity {
             }
         }
         loadedProfile.close();
-        viewProfile.setOnClickListener(v -> {
-            Intent i = new Intent(Home.this, Profile.class);
-            startActivity(i);
-        });
-        checkInAttendance.setOnClickListener(v -> {
-            Intent i = new Intent(Home.this, Attendance.class);
-            startActivity(i);
-        });
     }
 
     private Bitmap decodeUri(Uri profileUri) {
@@ -98,6 +100,12 @@ public class Home extends AppCompatActivity {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateHome();
     }
 }
 

@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -28,7 +29,6 @@ import androidx.core.content.ContextCompat;
 
 public class Profile extends AppCompatActivity {
     Button logout;
-    Button moveHome;
     TextView nameDisplay;
     TextView emailDisplay;
     SQLiteDatabase AttendXPressDB;
@@ -39,9 +39,9 @@ public class Profile extends AppCompatActivity {
     protected void onCreate(Bundle savedIntanceState) {
         super.onCreate(savedIntanceState);
         setContentView(R.layout.profile);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         logout = findViewById(R.id.logout);
-        moveHome = findViewById(R.id.moveHome);
         nameDisplay = findViewById(R.id.nameDisplay_profile);
         emailDisplay = findViewById(R.id.emailDisplay_profile);
         profile = findViewById(R.id.profile);
@@ -83,11 +83,6 @@ public class Profile extends AppCompatActivity {
 
         logout.setOnClickListener(v -> {
             Intent i = new Intent(Profile.this, Login.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(i);
-        });
-        moveHome.setOnClickListener(v -> {
-            Intent i = new Intent(Profile.this, Home.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
         });
@@ -145,4 +140,13 @@ public class Profile extends AppCompatActivity {
         return null;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                getOnBackPressedDispatcher().onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

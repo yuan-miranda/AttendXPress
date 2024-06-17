@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -17,7 +18,6 @@ import java.io.ByteArrayOutputStream;
 
 public class Attendance_Verification_Cam extends AppCompatActivity {
     Button pitik;
-    Button moveHome;
     ImageView pitikPreview;
     Button bSubmit;
     ActivityResultLauncher<Intent> activityResultLauncher;
@@ -27,9 +27,9 @@ public class Attendance_Verification_Cam extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.attendance_verification_cam);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         pitik = findViewById(R.id.pitik);
-        moveHome = findViewById(R.id.moveHome);
         pitikPreview = findViewById(R.id.pitikPreview);
         bSubmit = findViewById(R.id.bSubmit);
 
@@ -58,11 +58,17 @@ public class Attendance_Verification_Cam extends AppCompatActivity {
             Intent i = new Intent(Attendance_Verification_Cam.this, Attendance_Verification_Success.class);
             i.putExtra("pitikImage", bytes);
             startActivity(i);
+            finish();
         });
-        moveHome.setOnClickListener(v -> {
-            Intent i = new Intent(Attendance_Verification_Cam.this, Home.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(i);
-        });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                getOnBackPressedDispatcher().onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -19,30 +20,23 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
 public class Attendance_Verification_Check_Pending extends AppCompatActivity {
-    Button moveHome;
     SQLiteDatabase PendingAttendanceDB;
-//    SQLiteDatabase attendanceDB;
+    LinearLayout attendanceStack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.attendance_verification_check_pending);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        attendanceStack = findViewById(R.id.checkPendingAttendanceStack);
         PendingAttendanceDB = openOrCreateDatabase("PendingAttendanceDB", Context.MODE_PRIVATE, null);
         PendingAttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS pending_attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, pendingState TEXT NOT NULL, pitikImage TEXT NOT NULL)");
 
         constructPendingAttendanceElements();
-
-        moveHome = findViewById(R.id.moveHome);
-        moveHome.setOnClickListener(v -> {
-            Intent i = new Intent(Attendance_Verification_Check_Pending.this, Home.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(i);
-        });
     }
 
     private void constructPendingAttendanceElements() {
-        LinearLayout attendanceStack = findViewById(R.id.checkPendingAttendanceStack);
         try {
             Cursor findPendingAttendanceRecord = PendingAttendanceDB.rawQuery("SELECT * FROM pending_attendance_records WHERE email=?", new String[]{GlobalVariables.email});
             if (findPendingAttendanceRecord.moveToFirst()) {
@@ -118,5 +112,22 @@ public class Attendance_Verification_Check_Pending extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                getOnBackPressedDispatcher().onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        attendanceStack.removeAllViews();
+        constructPendingAttendanceElements();
     }
 }

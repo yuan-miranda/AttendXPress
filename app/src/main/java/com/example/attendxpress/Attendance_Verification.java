@@ -2,6 +2,7 @@ package com.example.attendxpress;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -14,16 +15,15 @@ import androidx.core.content.ContextCompat;
 public class Attendance_Verification extends AppCompatActivity {
     Button viaCamera;
     Button viaFingerprint;
-    Button moveHome;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.attendance_verification);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         viaCamera = findViewById(R.id.viaCamera);
         viaFingerprint = findViewById(R.id.viaFingerprint);
-        moveHome = findViewById(R.id.moveHome);
 
         viaCamera.setOnClickListener(v -> {
             Intent i = new Intent(Attendance_Verification.this, Attendance_Verification_Cam.class);
@@ -31,11 +31,6 @@ public class Attendance_Verification extends AppCompatActivity {
         });
         viaFingerprint.setOnClickListener(v -> {
             showBiometricPrompt();
-        });
-        moveHome.setOnClickListener(v -> {
-            Intent i = new Intent(Attendance_Verification.this, Home.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(i);
         });
     }
 
@@ -83,5 +78,15 @@ public class Attendance_Verification extends AppCompatActivity {
             }
         });
         biometricPrompt.authenticate(promptInfo);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                getOnBackPressedDispatcher().onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
