@@ -32,6 +32,7 @@ public class Attendance_Verification_Success extends AppCompatActivity {
         pitikImage = new byte[0];
 
         PendingAttendanceDB = openOrCreateDatabase("PendingAttendanceDB", Context.MODE_PRIVATE, null);
+        PendingAttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS pending_attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, pendingState TEXT NOT NULL, pitikImage TEXT NOT NULL)");
 
         Intent intent = getIntent();
         if (intent.hasExtra("pitikImage")) {
@@ -58,8 +59,6 @@ public class Attendance_Verification_Success extends AppCompatActivity {
     }
 
     private void insertPendingAttendanceData(String email, String date, String day, String pendingState) {
-        PendingAttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS pending_attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, pendingState TEXT NOT NULL, pitikImage TEXT NOT NULL)");
-
         ContentValues cv = new ContentValues();
         cv.put("email", email);
         cv.put("date", date);

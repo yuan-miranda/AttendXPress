@@ -28,10 +28,8 @@ public class Attendance_Verification_Check_Pending extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.attendance_verification_check_pending);
 
-//        attendanceDB = openOrCreateDatabase("attendanceDB" + GlobalVariables.email, Context.MODE_PRIVATE, null);
-//        attendanceDB.execSQL("CREATE TABLE IF NOT EXISTS attendancedb(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, day TEXT NOT NULL, isPresent INTEGER NOT NULL)");
-
         PendingAttendanceDB = openOrCreateDatabase("PendingAttendanceDB", Context.MODE_PRIVATE, null);
+        PendingAttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS pending_attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, pendingState TEXT NOT NULL, pitikImage TEXT NOT NULL)");
 
         constructPendingAttendanceElements();
 
@@ -42,14 +40,6 @@ public class Attendance_Verification_Check_Pending extends AppCompatActivity {
             startActivity(i);
         });
     }
-
-//    private void insertAttendanceData(String date, String day, boolean isPresent) {
-//        ContentValues cv = new ContentValues();
-//        cv.put("date", date);
-//        cv.put("day", day);
-//        cv.put("isPresent", isPresent ? 1: 0);
-//        attendanceDB.insert("attendanceDB" + GlobalVariables.email, null, cv);
-//    }
 
     private void constructPendingAttendanceElements() {
         LinearLayout attendanceStack = findViewById(R.id.checkPendingAttendanceStack);
@@ -74,7 +64,7 @@ public class Attendance_Verification_Check_Pending extends AppCompatActivity {
                     if (pendingState.equals("PENDING")) {
                         constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_none, null));
                     }
-                    else if (pendingState.equals("FAILED")) {
+                    else if (pendingState.equals("REJECTED")) {
                         constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_absent, null));
                     }
                     else if (pendingState.equals("VERIFIED")) {

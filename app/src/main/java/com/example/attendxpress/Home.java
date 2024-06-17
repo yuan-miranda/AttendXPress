@@ -22,7 +22,6 @@ public class Home extends AppCompatActivity {
     TextView emailDisplay;
     TextView promptNameDisplay;
     SQLiteDatabase AttendXPressDB;
-    Cursor getName;
     ImageView miniProfile;
 
     @Override
@@ -38,10 +37,11 @@ public class Home extends AppCompatActivity {
         miniProfile = findViewById(R.id.miniProfile);
 
         AttendXPressDB = openOrCreateDatabase("AttendXPressDB", Context.MODE_PRIVATE, null);
+        AttendXPressDB.execSQL("CREATE TABLE IF NOT EXISTS users(email VARCHAR PRIMARY KEY, password VARCHAR, name VARCHAR, profile_picture TEXT);");
 
         String sEmail = GlobalVariables.email;
 
-        getName = AttendXPressDB.rawQuery("SELECT name FROM users WHERE email=?", new String[]{sEmail});
+        Cursor getName = AttendXPressDB.rawQuery("SELECT name FROM users WHERE email=?", new String[]{sEmail});
         if (getName != null && getName.moveToFirst()) {
             String userName = getName.getString(getName.getColumnIndex("name"));
             nameDisplay.setText(userName);
@@ -64,7 +64,7 @@ public class Home extends AppCompatActivity {
                 }
             }
         }
-
+        loadedProfile.close();
         viewProfile.setOnClickListener(v -> {
             Intent i = new Intent(Home.this, Profile.class);
             startActivity(i);

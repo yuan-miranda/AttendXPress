@@ -35,7 +35,6 @@ public class Attendance extends AppCompatActivity {
 
         AttendanceDB = openOrCreateDatabase("AttendanceDB", Context.MODE_PRIVATE, null);
         AttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, isPresent INTEGER NOT NULL)");
-
         PendingAttendanceDB = openOrCreateDatabase("PendingAttendanceDB", Context.MODE_PRIVATE, null);
         PendingAttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS pending_attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, pendingState TEXT NOT NULL, pitikImage TEXT NOT NULL)");
 
@@ -43,14 +42,22 @@ public class Attendance extends AppCompatActivity {
         constructAttendanceElements();
 
         checkInToday.setOnClickListener(v -> {
-            Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM pending_attendance_records WHERE email=? AND date=?", new String[]{GlobalVariables.email, GlobalVariables.getCurrentDate()});
-            if (c.moveToFirst()) {
-                String pendingState = c.getString(c.getColumnIndex("pendingState"));
-                if (pendingState.equals("PENDING") || pendingState.equals("VERIFIED")) {
+            Cursor findUserPendingAttendance = PendingAttendanceDB.rawQuery("SELECT * FROM pending_attendance_records WHERE email=? AND date=?", new String[]{GlobalVariables.email, GlobalVariables.getCurrentDate()});
+            Cursor findUserAttendance = AttendanceDB.rawQuery("SELECT * FROM attendance_records WHERE email=? AND date=?", new String[]{GlobalVariables.email, GlobalVariables.getCurrentDate()});
+
+            if (findUserPendingAttendance.moveToFirst()) {
+                String pendingState = findUserPendingAttendance.getString(findUserPendingAttendance.getColumnIndex("pendingState"));
+                if (pendingState.equals("PENDING")) {
+                    Toast.makeText(this, "You have pending attendance verification. Please wait.", Toast.LENGTH_SHORT).show();
+                } else if (pendingState.equals("VERIFIED") || findUserAttendance.moveToFirst()) {
                     Toast.makeText(this, "You have already checked in for today.", Toast.LENGTH_SHORT).show();
-                    return;
                 }
+                findUserPendingAttendance.close();
+                findUserAttendance.close();
+                return;
             }
+            findUserPendingAttendance.close();
+            findUserAttendance.close();
             Intent i = new Intent(Attendance.this, Attendance_Verification.class);
             startActivity(i);
         });

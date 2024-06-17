@@ -41,7 +41,9 @@ public class AdminPanel extends AppCompatActivity {
         adminPanelLogout = findViewById(R.id.adminPanelLogout);
 
         AttendXPressDB = openOrCreateDatabase("AttendXPressDB", Context.MODE_PRIVATE, null);
+        AttendXPressDB.execSQL("CREATE TABLE IF NOT EXISTS users(email VARCHAR PRIMARY KEY, password VARCHAR, name VARCHAR, profile_picture TEXT);");
         PendingAttendanceDB = openOrCreateDatabase("PendingAttendanceDB", Context.MODE_PRIVATE, null);
+        PendingAttendanceDB.execSQL("CREATE TABLE IF NOT EXISTS pending_attendance_records(id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, date TEXT NOT NULL, day TEXT NOT NULL, pendingState TEXT NOT NULL, pitikImage TEXT NOT NULL)");
 
         adminPanelLogout.setOnClickListener(v -> {
             Intent i = new Intent(AdminPanel.this, Login.class);
@@ -79,9 +81,10 @@ public class AdminPanel extends AppCompatActivity {
                         String email = findUsers.getString(findUsers.getColumnIndex("email"));
                         TextView userTextView = new TextView(this);
                         userTextView.setText(email);
+                        userTextView.setTextSize(20);
                         userTextView.setOnClickListener(v -> {
                             adminPanelPendingAttendanceStack.removeAllViews();
-                            constructPendingAttendanceElements(email); // Passing email directly
+                            constructPendingAttendanceElements(email);
                         });
 
                         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -101,7 +104,6 @@ public class AdminPanel extends AppCompatActivity {
                 } else {
                     adminPanelDisplayNoAttendance.setVisibility(View.GONE);
                 }
-
                 findUsers.close();
             } catch (Exception e) {
                 Toast.makeText(this, "Error.", Toast.LENGTH_SHORT).show();
@@ -117,23 +119,22 @@ public class AdminPanel extends AppCompatActivity {
         adminPanelPendingAttendanceStack.removeAllViews();
 
         try {
-            Cursor c = PendingAttendanceDB.rawQuery("SELECT * FROM pending_attendance_records WHERE email=?", new String[]{email});
+            Cursor pendingattendanceDB = PendingAttendanceDB.rawQuery("SELECT * FROM pending_attendance_records WHERE email=?", new String[]{email});
             Cursor attendxpressDB = AttendXPressDB.rawQuery("SELECT * FROM users WHERE email=?", new String[]{email});
 
-            if (c.moveToFirst()) {
+            if (pendingattendanceDB.moveToFirst()) {
                 attendxpressDB.moveToFirst();
                 do {
-                    int id = c.getInt(c.getColumnIndex("id"));
-                    String date = c.getString(c.getColumnIndex("date"));
-                    String day = c.getString(c.getColumnIndex("day"));
-                    String pendingState = c.getString(c.getColumnIndex("pendingState"));
-                    byte[] pitikImageBytes = c.getBlob(c.getColumnIndex("pitikImage"));
+                    int id = pendingattendanceDB.getInt(pendingattendanceDB.getColumnIndex("id"));
+                    String date = pendingattendanceDB.getString(pendingattendanceDB.getColumnIndex("date"));
+                    String day = pendingattendanceDB.getString(pendingattendanceDB.getColumnIndex("day"));
+                    String pendingState = pendingattendanceDB.getString(pendingattendanceDB.getColumnIndex("pendingState"));
+                    byte[] pitikImageBytes = pendingattendanceDB.getBlob(pendingattendanceDB.getColumnIndex("pitikImage"));
                     Bitmap pitikBitmap = BitmapFactory.decodeByteArray(pitikImageBytes, 0, pitikImageBytes.length);
 
                     String userEmail = attendxpressDB.getString(attendxpressDB.getColumnIndex("email"));
                     String userName = attendxpressDB.getString(attendxpressDB.getColumnIndex("name"));
                     String userProfileUri = attendxpressDB.getString(attendxpressDB.getColumnIndex("profile_picture"));
-
 
                     // create ConstraintLayout
                     ConstraintLayout constraintLayout = new ConstraintLayout(this);
@@ -146,7 +147,7 @@ public class AdminPanel extends AppCompatActivity {
 
                     if (pendingState.equals("PENDING")) {
                         constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_none, null));
-                    } else if (pendingState.equals("FAILED")) {
+                    } else if (pendingState.equals("REJECTED")) {
                         constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_absent, null));
                     } else if (pendingState.equals("VERIFIED")) {
                         constraintLayout.setBackground(getResources().getDrawable(R.drawable.checkin_present, null));
@@ -191,22 +192,34 @@ public class AdminPanel extends AppCompatActivity {
 
                     constraintLayout.setOnClickListener(v -> {
                         Intent intent = new Intent(AdminPanel.this, AdminPanelPendingAttendanceDetail.class);
+                        intent.putExtra("id", id);
                         intent.putExtra("userProfileUri", userProfileUri);
                         intent.putExtra("pitikBitmap", pitikBitmap);
                         intent.putExtra("userEmail", userEmail);
                         intent.putExtra("date", date);
+                        intent.putExtra("day", day);
                         intent.putExtra("userName", userName);
+                        intent.putExtra("pendingState", pendingState);
                         startActivity(intent);
                     });
-                } while (c.moveToNext());
+                } while (pendingattendanceDB.moveToNext());
             }
             else {
-                adminPanelDisplayNoAttendance.setVisibility(View.VISIBLE);
                 adminPanelDisplayNoAttendance.setText("No records found.");
+                adminPanelDisplayNoAttendance.setVisibility(View.VISIBLE);
             }
+            pendingattendanceDB.close();
+            attendxpressDB.close();
         } catch (Exception e) {
             Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        adminPanelPendingAttendanceStack.removeAllViews();
+        searchFirstUser(adminPanelFindUser.getText().toString());
     }
 }

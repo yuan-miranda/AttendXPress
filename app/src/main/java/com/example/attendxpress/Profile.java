@@ -32,8 +32,6 @@ public class Profile extends AppCompatActivity {
     TextView nameDisplay;
     TextView emailDisplay;
     SQLiteDatabase AttendXPressDB;
-    Intent getEmail;
-    Cursor getName;
     ImageView profile;
     ActivityResultLauncher<Intent> activityResultLauncher;
 
@@ -49,10 +47,11 @@ public class Profile extends AppCompatActivity {
         profile = findViewById(R.id.profile);
 
         AttendXPressDB = openOrCreateDatabase("AttendXPressDB", Context.MODE_PRIVATE, null);
+        AttendXPressDB.execSQL("CREATE TABLE IF NOT EXISTS users(email VARCHAR PRIMARY KEY, password VARCHAR, name VARCHAR, profile_picture TEXT);");
 
         String sEmail = GlobalVariables.email;
 
-        getName = AttendXPressDB.rawQuery("SELECT name FROM users WHERE email=?", new String[]{sEmail});
+        Cursor getName = AttendXPressDB.rawQuery("SELECT name FROM users WHERE email=?", new String[]{sEmail});
         if (getName != null) {
             nameDisplay.setText((getName.moveToFirst()) ? getName.getString(getName.getColumnIndex("name")) : "Name not found");
         }
